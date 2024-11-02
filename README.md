@@ -8,7 +8,9 @@ javascript| Sailjs | node | Azure Web App| |
 
 ## Installation
 
-For development, you will need Node.js and a node global package
+For development, you will need Python 
+
+      $ pip install -r requirements.txt
 
 ### Node
 - #### Node installation on Windows
