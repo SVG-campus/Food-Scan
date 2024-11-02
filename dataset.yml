@@ -1,0 +1,5 @@
+train: path/to/train/images
+val: path/to/val/images
+
+nc: 22  # Number of classes
+names: ['ripe apple', 'ripe banana', 'ripe dragon', ...]  # Add your classes here
