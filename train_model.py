@@ -1,53 +1,28 @@
 import os
-import numpy as np
-import tensorflow as tf
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras import layers, models
+import torch
+import pytorch_lightning as pl
+from models.yolo import YOLOv5  # Make sure you have YOLOv5 correctly set up
+from pytorch_lightning.callbacks import ModelCheckpoint
 
-# Define paths
-dataset_path = "path_to_downloaded_dataset"  # Replace with actual dataset path
+# Load dataset path and model configuration
+dataset_yaml = "dataset.yaml"
+model = YOLOv5()
 
-# Define data generators
-train_datagen = ImageDataGenerator(rescale=1.0/255, validation_split=0.2)
-
-train_generator = train_datagen.flow_from_directory(
-    dataset_path,
-    target_size=(128, 128),
-    batch_size=32,
-    class_mode='binary',
-    subset='training'
+# Set up checkpoints
+checkpoint_callback = ModelCheckpoint(
+    dirpath='model/',
+    filename='best_model',
+    monitor='val_loss',
+    mode='min',
+    save_top_k=1,
 )
 
-validation_generator = train_datagen.flow_from_directory(
-    dataset_path,
-    target_size=(128, 128),
-    batch_size=32,
-    class_mode='binary',
-    subset='validation'
+# Prepare trainer
+trainer = pl.Trainer(
+    max_epochs=50,
+    callbacks=[checkpoint_callback],
+    gpus=1 if torch.cuda.is_available() else 0,
 )
 
-# Build a simple CNN model
-model = models.Sequential([
-    layers.Conv2D(32, (3, 3), activation='relu', input_shape=(128, 128, 3)),
-    layers.MaxPooling2D((2, 2)),
-    layers.Conv2D(64, (3, 3), activation='relu'),
-    layers.MaxPooling2D((2, 2)),
-    layers.Conv2D(64, (3, 3), activation='relu'),
-    layers.Flatten(),
-    layers.Dense(64, activation='relu'),
-    layers.Dense(1, activation='sigmoid')  # Binary classification for ripe/unripe
-])
-
-# Compile the model
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-
-# Train the model
-history = model.fit(
-    train_generator,
-    epochs=10,
-    validation_data=validation_generator
-)
-
-# Save the trained model
-model.save("fruit_ripeness_model.h5")
-print("Model training complete and saved as fruit_ripeness_model.h5")
+# Start training
+trainer.fit(model, dataloaders=dataset_yaml)
