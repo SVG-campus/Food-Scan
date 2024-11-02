@@ -1,11 +1,15 @@
-from flask import Flask, request, jsonify
-import torch
+from flask import Flask, request, jsonify, render_template
+import os
 from models.yolo import YOLOv5
 
 app = Flask(__name__)
 
 # Load the trained model
 model = YOLOv5.load_from_checkpoint("model/best_model.ckpt")
+
+@app.route('/')
+def index():
+    return render_template('index.html')  # Serve the HTML page
 
 @app.route('/upload', methods=['POST'])
 def upload_image():
